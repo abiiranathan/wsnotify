@@ -518,7 +518,11 @@ func (c *Client) SetMetadata(key string, value any) {
 
 func (c *Client) serve() {
 	defer c.server.forgetClient(c)
-	defer c.conn.Close()
+	defer func() {
+		if err := c.conn.Close(); err != nil {
+			log.Printf("close error: %v", err)
+		}
+	}()
 
 	// Reader
 	go c.readPump()

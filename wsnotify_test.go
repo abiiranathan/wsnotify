@@ -93,11 +93,19 @@ func TestServerDefaults(t *testing.T) {
 
 func TestClientConnection(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	// Give server time to register client
 	time.Sleep(10 * time.Millisecond)
@@ -136,11 +144,19 @@ func TestChannelValidation(t *testing.T) {
 
 func TestSubscriptionAndUnsubscription(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -198,11 +214,19 @@ func TestSubscriptionAndUnsubscription(t *testing.T) {
 
 func TestInvalidChannelSubscription(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -223,11 +247,19 @@ func TestInvalidChannelSubscription(t *testing.T) {
 
 func TestMessagePublishing(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -290,11 +322,19 @@ func TestMessagePublishing(t *testing.T) {
 
 func TestMessageTypes(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -307,7 +347,9 @@ func TestMessageTypes(t *testing.T) {
 	server.clientsMu.RUnlock()
 
 	channel := Channel("test-channel")
-	server.Subscribe(client, channel)
+	if err := server.Subscribe(client, channel); err != nil {
+		t.Fatalf("failed to subscribe: %v", err)
+	}
 
 	receivedCh := make(chan Payload, 3)
 	go func() {
@@ -350,11 +392,19 @@ func TestMessageTypes(t *testing.T) {
 
 func TestMessageBatching(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -367,7 +417,9 @@ func TestMessageBatching(t *testing.T) {
 	server.clientsMu.RUnlock()
 
 	channel := Channel("batch-channel")
-	server.Subscribe(client, channel)
+	if err := server.Subscribe(client, channel); err != nil {
+		t.Fatalf("failed to subscribe: %v", err)
+	}
 
 	receivedCh := make(chan Payload, 1)
 	go func() {
@@ -415,11 +467,19 @@ func TestMessageBatching(t *testing.T) {
 
 func TestMessageBatchingDeduplication(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -432,7 +492,9 @@ func TestMessageBatchingDeduplication(t *testing.T) {
 	server.clientsMu.RUnlock()
 
 	channel := Channel("dedup-channel")
-	server.Subscribe(client, channel)
+	if err := server.Subscribe(client, channel); err != nil {
+		t.Fatalf("failed to subscribe: %v", err)
+	}
 
 	receivedCh := make(chan Payload, 1)
 	go func() {
@@ -472,12 +534,20 @@ func TestMessageBatchingDeduplication(t *testing.T) {
 
 func TestStringBatching(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	// Use defer for cleanup
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	// Wait a moment for the server to register the new client.
 	time.Sleep(20 * time.Millisecond)
@@ -564,7 +634,11 @@ func TestStringBatching(t *testing.T) {
 
 func TestCancelPendingMessages(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	channel := Channel("cancel-channel")
 
@@ -597,7 +671,11 @@ func TestCancelPendingMessages(t *testing.T) {
 
 func TestMessageHandler(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	var receivedMessages []IncomingMessage
 	var mu sync.Mutex
@@ -610,7 +688,11 @@ func TestMessageHandler(t *testing.T) {
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -656,11 +738,19 @@ func TestMessageHandler(t *testing.T) {
 
 func TestClientMetadata(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -701,19 +791,32 @@ func TestClientMetadata(t *testing.T) {
 
 func TestPublishToClient(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	// Create two connections
 	conn1, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn1.Close()
+	defer func() {
+		if err := conn1.Close(); err != nil {
+			t.Errorf("close error: %v", err)
+		}
+	}()
 
 	conn2, _, err := websocket.DefaultDialer.Dial(
 		"ws"+strings.TrimPrefix(httpServer.URL, "http")+"/ws", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer conn2.Close()
+
+	defer func() {
+		if err := conn2.Close(); err != nil {
+			t.Errorf("close error: %v", err)
+		}
+	}()
 
 	time.Sleep(20 * time.Millisecond)
 
@@ -778,7 +881,11 @@ func TestBackpressureHandling(t *testing.T) {
 	opts.Defaults()
 
 	server := NewServer(opts)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
@@ -794,12 +901,16 @@ func TestBackpressureHandling(t *testing.T) {
 	server.clientsMu.RUnlock()
 
 	channel := Channel("backpressure-channel")
-	server.Subscribe(client, channel)
+	if err := server.Subscribe(client, channel); err != nil {
+		t.Fatalf("failed to subscribe: %v", err)
+	}
 
 	// Fill up the buffer by sending many messages quickly
 	// Don't read from connection to simulate slow client
 	for i := range 10 {
-		server.Publish(channel, fmt.Sprintf("message %d", i))
+		if err := server.Publish(channel, fmt.Sprintf("message %d", i)); err != nil {
+			t.Fatalf("failed to publish message: %v\n", err)
+		}
 	}
 
 	// Give time for backpressure to kick in
@@ -854,7 +965,11 @@ func TestGracefulShutdown(t *testing.T) {
 
 func TestConcurrentOperations(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	const numClients = 10
 	const numMessages = 50
@@ -870,7 +985,11 @@ func TestConcurrentOperations(t *testing.T) {
 
 			conn, httpServer := newTestConnection(t, server)
 			defer httpServer.Close()
-			defer conn.Close()
+			defer func() {
+				if err := conn.Close(); err != nil {
+					t.Errorf("close with err: %v", err)
+				}
+			}()
 
 			connectedClients.Add(1)
 			defer connectedClients.Add(-1)
@@ -911,7 +1030,11 @@ func TestConcurrentOperations(t *testing.T) {
 
 func TestInvalidMessages(t *testing.T) {
 	server := newTestServer(t)
-	defer server.Shutdown(context.Background())
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			t.Fatalf("error shutting down server")
+		}
+	}()
 
 	var errorReceived atomic.Bool
 	server.SetMessageHandler(func(client *Client, message IncomingMessage) {
@@ -921,7 +1044,11 @@ func TestInvalidMessages(t *testing.T) {
 
 	conn, httpServer := newTestConnection(t, server)
 	defer httpServer.Close()
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Errorf("close with err: %v", err)
+		}
+	}()
 
 	time.Sleep(10 * time.Millisecond)
 

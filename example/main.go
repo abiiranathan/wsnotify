@@ -46,7 +46,7 @@ func main() {
 				} else {
 					log.Printf("Client %s subscribed to %s", client.ID, ch)
 					// Confirm subscription to the client
-					err=server.PublishToClient(client, channel,
+					err = server.PublishToClient(client, channel,
 						map[string]string{"status": "subscribed", "channel": ch},
 						wsnotify.MessageTypeJSON, "", msg.MessageID)
 					if err != nil {
@@ -58,8 +58,8 @@ func main() {
 			// The client specifies the channel in the message envelope
 			if msg.Channel != "" {
 				// Broadcast the message to all subscribers of the channel
-				err:=server.Publish(wsnotify.Channel(msg.Channel), data)
-				if err != nil{
+				err := server.Publish(wsnotify.Channel(msg.Channel), data)
+				if err != nil {
 					log.Println(err)
 				}
 			}
@@ -72,7 +72,7 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		_, err := w.Write(indexHTML)
-		if err != nil{
+		if err != nil {
 			log.Println(err)
 		}
 	})
