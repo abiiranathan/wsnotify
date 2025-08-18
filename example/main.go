@@ -22,6 +22,10 @@ func main() {
 	opts.Defaults()
 	server := wsnotify.NewServer(opts)
 
+	server.SetDisconnectHandler(func(client *wsnotify.Client) {
+		log.Printf("Client disconnected: %v\n", client.ID)
+	})
+
 	// Define a handler for incoming messages from clients
 	server.SetMessageHandler(func(client *wsnotify.Client, msg wsnotify.IncomingMessage) {
 		log.Printf("Received message from %s: type=%s, channel=%s", client.ID, msg.Type, msg.Channel)
