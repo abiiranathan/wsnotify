@@ -57,6 +57,7 @@ func (c Channel) Valid() bool {
 }
 
 type MessageHandler func(client *Client, message IncomingMessage)
+type DisconnectHandler func(client *Client)
 
 // ServerOptions configures server behavior.
 type ServerOptions struct {
@@ -127,7 +128,8 @@ type Server struct {
 	connections atomic.Int64
 
 	// handler for incoming messages
-	messageHandler atomic.Value // MessageHandler
+	messageHandler    atomic.Value // MessageHandler
+	disconnectHandler atomic.Value // DisconnectHandler
 
 	// shutdown coordination
 	wg sync.WaitGroup
@@ -177,8 +179,18 @@ func (s *Server) SetMessageHandler(handler MessageHandler) {
 	s.messageHandler.Store(handler)
 }
 
+// SetMessageHandler sets the handler for client-originated messages.
+func (s *Server) SetDisconnectHandler(handler DisconnectHandler) {
+	s.disconnectHandler.Store(handler)
+}
+
 func (s *Server) handler() MessageHandler {
 	h, _ := s.messageHandler.Load().(MessageHandler)
+	return h
+}
+
+func (s *Server) clientDisconnectHandler() DisconnectHandler {
+	h, _ := s.disconnectHandler.Load().(DisconnectHandler)
 	return h
 }
 
@@ -453,6 +465,9 @@ func (s *Server) newClient(conn *websocket.Conn) *Client {
 
 func (s *Server) forgetClient(c *Client) {
 	s.clientsMu.Lock()
+	if h := s.clientDisconnectHandler(); h != nil {
+		h(c)
+	}
 	delete(s.clients, c)
 	s.clientsMu.Unlock()
 
