@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>wsnotify Chat</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+        }
+
+        .msg {
+            margin-bottom: 5px;
+        }
+
+        .msg-meta {
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>wsnotify Chat</h1>
+    <div>
+        <label for="channel">Channel:</label>
+        <input type="text" id="channel" value="general">
+        <button id="subscribe">Subscribe</button>
+    </div>
+    <hr>
+    <div id="messages"></div>
+    <input type="text" id="message" placeholder="Type a message..." size="50">
+    <button id="send">Send</button>
+
+    <script>
+        const ws = new WebSocket('ws://' + location.host + '/ws');
+        const channelInput = document.getElementById('channel');
+        const subscribeBtn = document.getElementById('subscribe');
+        const messageInput = document.getElementById('message');
+        const sendBtn = document.getElementById('send');
+        const messagesDiv = document.getElementById('messages');
+
+        let currentChannel = '';
+
+        function logMessage(content) {
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = content;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        ws.onopen = () => logMessage('<em>Connected to server.</em>');
+        ws.onclose = () => logMessage('<em>Disconnected from server.</em>');
+        ws.onerror = (err) => logMessage(`<em>Error: ${err.message}</em>`);
+
+        ws.onmessage = function (event) {
+            const payload = JSON.parse(event.data);
+            console.log('Received:', payload);
+
+            let content = '';
+            if (payload.type === 'error') {
+                content = `<span class="msg-meta">Error: ${payload.message.error}</span>`;
+            } else {
+                const time = new Date(payload.time).toLocaleTimeString();
+                content = `<span class="msg-meta">[${time} on #${payload.channel}]</span> ${JSON.stringify(payload.message)}`;
+            }
+            logMessage(content);
+        };
+
+        function send(payload) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(payload));
+            }
+        }
+
+        subscribeBtn.onclick = function () {
+            currentChannel = channelInput.value;
+            if (!currentChannel) {
+                alert('Channel name cannot be empty.');
+                return;
+            }
+            send({
+                type: 'json',
+                message: { action: 'subscribe', channel: currentChannel }
+            });
+            logMessage(`<em>Subscribing to #${currentChannel}...</em>`);
+        };
+
+        sendBtn.onclick = function () {
+            if (!currentChannel) {
+                alert('Please subscribe to a channel first.');
+                return;
+            }
+            send({
+                type: 'json',
+                channel: currentChannel,
+                message: { action: 'broadcast', text: messageInput.value }
+            });
+            messageInput.value = '';
+        };
+    </script>
+</body>
+
+</html>
