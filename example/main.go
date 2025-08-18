@@ -46,16 +46,22 @@ func main() {
 				} else {
 					log.Printf("Client %s subscribed to %s", client.ID, ch)
 					// Confirm subscription to the client
-					server.PublishToClient(client, channel,
+					err=server.PublishToClient(client, channel,
 						map[string]string{"status": "subscribed", "channel": ch},
 						wsnotify.MessageTypeJSON, "", msg.MessageID)
+					if err != nil {
+						log.Println(err)
+					}
 				}
 			}
 		case "broadcast":
 			// The client specifies the channel in the message envelope
 			if msg.Channel != "" {
 				// Broadcast the message to all subscribers of the channel
-				server.Publish(wsnotify.Channel(msg.Channel), data)
+				err:=server.Publish(wsnotify.Channel(msg.Channel), data)
+				if err != nil{
+					log.Println(err)
+				}
 			}
 		}
 	})
@@ -65,7 +71,10 @@ func main() {
 	mux.Handle("/ws", server.WebsocketHandler())
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		w.Write(indexHTML)
+		_, err := w.Write(indexHTML)
+		if err != nil{
+			log.Println(err)
+		}
 	})
 
 	// Start the server and implement graceful shutdown
