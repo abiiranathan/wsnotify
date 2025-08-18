@@ -58,7 +58,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v8.0.0
+          version: v2.1
 
       # ---------------------------------
       # Step 4: Run tests with coverage and race detector
