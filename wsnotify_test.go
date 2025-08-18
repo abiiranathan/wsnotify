@@ -907,7 +907,7 @@ func TestBackpressureHandling(t *testing.T) {
 
 	// Fill up the buffer by sending many messages quickly
 	// Don't read from connection to simulate slow client
-	for i := range 10 {
+	for i := range 1000 {
 		if err := server.Publish(channel, fmt.Sprintf("message %d", i)); err != nil {
 			t.Fatalf("failed to publish message: %v\n", err)
 		}
