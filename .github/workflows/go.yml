@@ -56,7 +56,7 @@ jobs:
       # before they are merged.
       # ---------------------------------
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: v8.0.0
 
