@@ -1,0 +1,89 @@
+# .github/workflows/go.yml
+
+name: Go CI
+
+# -----------------------------------------------------------------------------
+# Triggers
+#
+# This workflow runs on:
+# 1. Pushes to the `main` branch.
+# 2. Pull requests targeting the `main` branch.
+# -----------------------------------------------------------------------------
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# -----------------------------------------------------------------------------
+# Jobs
+#
+# Defines the sequence of tasks to be executed.
+# -----------------------------------------------------------------------------
+jobs:
+  build-and-test:
+    # Use the latest version of Ubuntu for the runner environment
+    runs-on: ubuntu-latest
+
+    # Use a matrix strategy to test against multiple Go versions
+    strategy:
+      matrix:
+        go-version: [ '1.21.x', '1.22.x' ]
+
+    steps:
+      # ---------------------------------
+      # Step 1: Check out the repository code
+      # ---------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------------------------------
+      # Step 2: Set up the Go environment
+      #
+      # This action sets up the specified Go version and caches dependencies
+      # to speed up subsequent builds.
+      # ---------------------------------
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true # Enable caching for GOMODCACHE and GOCACHE
+
+      # ---------------------------------
+      # Step 3: Run the linter (golangci-lint)
+      #
+      # Linting helps catch stylistic issues, bugs, and performance problems
+      # before they are merged.
+      # ---------------------------------
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2.3, defaults to latest if not supplied
+          version: v1.57.2
+          # Optional: working directory, useful for monorepos
+          # working-directory: somedir
+
+
+      # ---------------------------------
+      # Step 4: Run tests with coverage and race detector
+      #
+      # -v: Verbose output for better debugging in logs.
+      # -race: The race detector is crucial for concurrent code.
+      # -coverprofile: Generates a coverage report.
+      # -covermode=atomic: Required for accurate coverage with the race detector.
+      # ---------------------------------
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      # ---------------------------------
+      # Step 5: Upload the code coverage report as an artifact
+      #
+      # This makes the coverage report available for download from the
+      # GitHub Actions run page.
+      # ---------------------------------
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.go-version }}
+          path: coverage.out
+          
