@@ -474,7 +474,7 @@ func (s *Server) forgetClient(c *Client) {
 func (s *Server) broadcast(channel Channel, b []byte) {
 	// copy subscribers to avoid holding lock while sending
 	s.subsMu.RLock()
-	targets := make([]*Client, 0, 8)
+	targets := make([]*Client, 0, len(s.subs))
 	if subs := s.subs[channel]; subs != nil {
 		for c := range subs {
 			targets = append(targets, c)
@@ -611,9 +611,11 @@ func (c *Client) enqueueOrDrop(b []byte, drop bool, reason string) error {
 			c.closeWithReason(websocket.CloseGoingAway, reason)
 			return errors.New("backpressure: client queue full")
 		}
+
 		// Try a best-effort enqueue with timeout respecting WriteWait
 		timer := time.NewTimer(c.server.opts.WriteWait)
 		defer timer.Stop()
+
 		select {
 		case c.send <- b:
 			return nil
