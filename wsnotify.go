@@ -81,7 +81,19 @@ type ServerOptions struct {
 	CheckOrigin func(r *http.Request) bool
 }
 
+// Default connection options.
+var DefaultOptions = ServerOptions{
+	WriteWait:          10 * time.Second,
+	PongWait:           60 * time.Second,
+	PingPeriod:         54 * time.Second,
+	ReadLimit:          1 << 20, // 1MB
+	SendBuffer:         1024,
+	BackpressureReason: "going away: backpressure",
+	CloseGrace:         200 * time.Millisecond,
+}
+
 // Defaults returns a hardened set of defaults.
+// Only zero values are updated by Defaults function.
 func (o *ServerOptions) Defaults() {
 	if o.WriteWait == 0 {
 		o.WriteWait = 10 * time.Second
@@ -96,7 +108,7 @@ func (o *ServerOptions) Defaults() {
 		o.ReadLimit = 1 << 20 // 1 MiB
 	}
 	if o.SendBuffer == 0 {
-		o.SendBuffer = 256
+		o.SendBuffer = 1024
 	}
 	if o.BackpressureReason == "" {
 		o.BackpressureReason = "going away: backpressure"
